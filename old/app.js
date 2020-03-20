@@ -8,9 +8,7 @@ app.get('/',function(req, res) {
 });
 app.use('/client',express.static(__dirname + '/client'));
 
-serv.listen(2000, '192.168.1.3');
-//serv.listen(process.env.PORT || 2000);
-
+serv.listen(process.env.PORT || 2000);
 console.log("Server started...");
 
 var SOCKET_LIST = {};
@@ -49,7 +47,7 @@ function Bush(x, y){
 }
 function init_game(){
 	//world 1
-	this.item_count = 10;
+	this.item_count = 15;
 	for(var i =0; i< this.item_count;i++){
 		this.rx =  Math.floor(Math.random() * play_area);
 		this.ry =  Math.floor(Math.random() * play_area);
@@ -554,7 +552,6 @@ setInterval(function(){
 	removePack.bullet = [];
 
 	time ++;
-
 
 
 
