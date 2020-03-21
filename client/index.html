@@ -81,10 +81,18 @@ canvas{ position: absolute; z-index: 1 }
 		position: absolute;
 		margin: 0 auto;
 		z-index: 2;
-		height: 5%;
-		width: 5%;
 		background-color: rgba(0,0,0,0.5);
-		padding: 10px;
+		padding: 15px;
+	}
+	#time{
+		font-size: 1.2em;
+		top: 10;
+		left: 10;
+		position: absolute;
+		margin: 0 auto;
+		z-index: 2;
+		background-color: rgba(0,0,0,0.5);
+		padding: 15px;
 	}
 	button{
 		width: 90%;
@@ -155,8 +163,11 @@ a{
 				<form id="chat-form" >
 					<input id="chat-input" type="text" style="display:none" maxlength="30"></input>
 				</form>
-			<div id="world">
+				<div id="world">
 					World 1
+				</div>
+				<div id="time">
+						0:00
 				</div>
 				<div id="information-board" style="	list-style-type:none;">
 					<ul>
@@ -172,9 +183,7 @@ a{
 						<li id="wood">
 							Wood:
 						</li>
-						<li id="food">
-							Food:
-						</li>
+
 					</ul>
 				</div>
 		</div>
@@ -189,6 +198,7 @@ canvas.width = innerWidth-2;
 canvas.height = innerHeight-2;
 	var WIDTH = canvas.width;
 	var HEIGHT = canvas.height;
+	var play_area = 5000;
 	var p1x = 1500;
 	var p1y = 1500;
 	var p2x = 3000;
@@ -196,10 +206,12 @@ canvas.height = innerHeight-2;
 	var p3x = 6000;
 	var p3y = 1500;
 
+
 	var portal_size = 300;
 	var world = 1;
 	var rocks = [];
 	var bushes = [];
+	var healpads = [];
 	var time = 0;
 	var socket = io();
 	//starte
@@ -228,14 +240,18 @@ canvas.height = innerHeight-2;
 	var kills = document.getElementById('kills');
 	var stone = document.getElementById('stone');
 	var wood = document.getElementById('wood');
-	var food = document.getElementById('food');
+
+	var current_time = document.getElementById('time');
 	socket.on('addToChat',function(data){
 		chatText.innerHTML += '<div>' + data + '</div>';
 	});
 	socket.on('evalAnswer',function(data){
 		console.log(data);
 	});
-
+	socket.on('died', function(data){
+		console.log(data);
+		console.log('Died!!!')
+	});
 
 
 	chatForm.onsubmit = function(e){
@@ -260,9 +276,12 @@ canvas.height = innerHeight-2;
 	Img.portal = new Image();
 	Img.portal.src = ' client/img/portal.jpg';
 	Img.rock = new Image();
-	Img.rock.src = ' client/img/rock.png';
+	Img.rock.src = ' client/img/Stone.png';
 	Img.bush = new Image();
-	Img.bush.src = ' client/img/bullet.png';
+	Img.bush.src = ' client/img/Tree.png';
+	Img.healpad = new Image();
+	Img.healpad.src = ' client/img/healpad.png';
+
 
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';
@@ -282,7 +301,6 @@ canvas.height = innerHeight-2;
 		self.gold = initPack.gold;
 		self.stone = initPack.stone;
 		self.wood = initPack.wood;
-		self.food = initPack.food;
 		self.weapon = initPack.weapon;
 		self.world = initPack.world;
 		self.pressingAttack = initPack.pressingAttack;
@@ -291,6 +309,7 @@ canvas.height = innerHeight-2;
 		self.animate = false;
 		self.lastAngle = 0;
 		self.ticker = 0;
+		self.died = initPack.died;
 
 
 
@@ -304,8 +323,8 @@ canvas.height = innerHeight-2;
 			gold.innerHTML = 'Gold: ' + Player.list[selfId].gold;
 			stone.innerHTML = 'Stone: ' + Player.list[selfId].stone;
 			wood.innerHTML = 'Wood: ' + Player.list[selfId].wood;
-			food.innerHTML = 'Food: ' + Player.list[selfId].food;
 			world.innerHTML = 'World ' + Player.list[selfId].world;
+			current_time.innerHTML = 'Time: ' + time;
 
 			//draw players name
 			ctx.textAlign = 'center';
@@ -445,8 +464,6 @@ canvas.height = innerHeight-2;
 					p.stone = pack.stone;
 				if(pack.wood !== undefined)
 					p.wood = pack.wood;
-				if(pack.food !== undefined)
-					p.food = pack.food;
 				if(pack.name != undefined)
 					p.name = pack.name;
 				if(pack.mouseAngle != undefined)
@@ -457,6 +474,8 @@ canvas.height = innerHeight-2;
 						p.pressingAttack = pack.pressingAttack;
 				if(pack.world != undefined)
 						p.world = pack.world;
+				if(pack.died != undefined)
+						p.died = pack.died;
 
 
 
@@ -494,10 +513,14 @@ canvas.height = innerHeight-2;
 	socket.on('bushes',function(data){
 		bushes = data.slice(0);
 	});
+	socket.on('healpads',function(data){
+		healpads = data.slice(0);
+	});
 	//console.log(rocks);
 
 	socket.on('time', function(data){
-		time = data;
+		time = parseInt(data);
+
 	});
 
 	setInterval(function(){
@@ -509,6 +532,7 @@ canvas.height = innerHeight-2;
 		drawMap();
 
 		drawPortal();
+		drawObjects_top();
 		for(var i in Player.list)
 			Player.list[i].draw();
 		drawObjects();
@@ -516,6 +540,16 @@ canvas.height = innerHeight-2;
 			Bullet.list[i].draw();
 
 	},40);
+	var drawObjects_top = function(){
+		var x = WIDTH/2 - Player.list[selfId].x;
+		var y = HEIGHT/2 - Player.list[selfId].y;
+		var item_count = 10;
+		for(var i=0; i < item_count; i ++){
+			//console.log(rocks[i]);
+				ctx.drawImage(Img.healpad, x + healpads[i].x -75, y+ healpads[i].y - 75, 150, 150);
+		}
+
+	}
 	var drawObjects = function(){
 		var x = WIDTH/2 - Player.list[selfId].x;
 		var y = HEIGHT/2 - Player.list[selfId].y;
@@ -526,8 +560,9 @@ canvas.height = innerHeight-2;
 		}
 		for(var i=0; i < item_count; i ++){
 			//console.log(rocks[i]);
-				ctx.drawImage(Img.bush, x + bushes[i].x -75, y+ bushes[i].y - 75, 150, 150);
+				ctx.drawImage(Img.bush, x + bushes[i].x -125, y+ bushes[i].y - 125, 250, 250);
 		}
+
 	}
 	var drawMap = function(){
 		var x = WIDTH/2 - Player.list[selfId].x;
@@ -536,27 +571,29 @@ canvas.height = innerHeight-2;
 		ctx.fillRect(0,0,WIDTH,HEIGHT);
 		ctx.fill();
 
-		ctx.drawImage(Img.map,x,y,3000,3000);
+		ctx.drawImage(Img.map,x,y,play_area,play_area);
 		ctx.fillStyle = "rgba(100, 200, 155, 0.5)";;
-		ctx.fillRect(x,y,3000,3000);
+		ctx.fillRect(x,y,play_area,play_area);
 
 
 		//world 2
-		ctx.drawImage(Img.map,x+4000,y,3000,3000);
+		ctx.drawImage(Img.map,x+play_area + 1000,y,play_area,play_area);
 		ctx.fillStyle = "rgba(102, 196, 103, 0.5)";
-		ctx.fillRect(x + 4000,y, 3000,3000);
+		ctx.fillRect(x + play_area + 1000,y, play_area,play_area);
 
 
 		//world 3
+
+		ctx.drawImage(Img.map,x+play_area*2 + 2000,y,play_area,play_area);
 		ctx.fillStyle = "blue";
-		ctx.drawImage(Img.map,x+8000,y,3000,3000);
+		ctx.fillRect(x + play_area*2 + 2000,y, play_area,play_area);
 
 
 	}
 	var drawPortal = function(){
 		var x = WIDTH/2 - Player.list[selfId].x;
 		var y = HEIGHT/2 - Player.list[selfId].y;
-		ctx.drawImage(Img.portal, x + 1500, y+ 1500, 300, 300);
+		ctx.drawImage(Img.portal, x + play_area/2, y+ play_area/2, 300, 300);
 	}
 
 
