@@ -16,7 +16,7 @@ console.log("Server started...");
 var SOCKET_LIST = {};
 
 //game area
-var play_area = 3000;
+var play_area = 5000;
 var player_name = "unknown";
 var portal_open = false;
 var main_ticker = 0;
@@ -29,23 +29,32 @@ var p3y = 1500;
 
 var portal_size = 300;
 var time = 0;
+var time_mode = true;
+display_time = 0;
 
 var rocks = [];
-var trees = [];
+var healpads = [];
 var bushes = [];
 
+function Portal(x,y){
+	this.x = x;
+	this.y = y;
+	this.radius = 75;
+}
 function Rock(x, y){
 	this.x  = x;
 	this.y  = y;
 	this.radius = 50;
 }
-function Tree(x, y){
-
+function Healpad(x, y){
+	this.x = x;
+	this.y = y;
+	this.radius = 50;
 }
 function Bush(x, y){
 	this.x  = x;
 	this.y  = y;
-	this.radius = 50;
+	this.radius = 75;
 }
 function init_game(){
 	//world 1
@@ -56,12 +65,19 @@ function init_game(){
 
 		rocks.push(new Rock(this.rx ,this.ry));
 	}
-	for(var i =0; i< 15;i++){
+	for(var i =0; i< this.item_count;i++){
 		this.fx =  Math.floor(Math.random() * play_area);
 		this.fy =  Math.floor(Math.random() * play_area);
 
 		bushes.push(new Bush(this.fx ,this.fy));
 	}
+	for(var i =0; i< this.item_count;i++){
+		this.hx =  Math.floor(Math.random() * play_area);
+		this.hy =  Math.floor(Math.random() * play_area);
+
+		healpads.push(new Bush(this.hx ,this.hy));
+	}
+
 
 	//world 2
 
@@ -113,7 +129,6 @@ var Player = function(id){
 	self.gold = 0;
 	self.wood = 0;
 	self.stone = 0;
-	self.food = 0;
 	self.age = 0;
 	self.name = player_name;
 	self.died = false;
@@ -175,7 +190,7 @@ var Player = function(id){
 		//hit bushes
 		for(var i = 0; i < bushes.length; i ++){
 			if(self.getDistance(bushes[i])<130){
-				self.food ++;
+				self.wood ++;
 			}
 		}
 	}
@@ -214,6 +229,8 @@ var Player = function(id){
 				else
 					self.spdY = 0
 		}
+
+
 //hit side
 		if(self.x <= 0){
 			self.x = 0;
@@ -228,18 +245,18 @@ var Player = function(id){
 			self.y = play_area ;
 		}
 		//world 2
-		if(self.x <= 4000 && self.x > 3900){
-			self.x = 4000;
+		if(self.x <= play_area + 1000 && self.x > play_area + 900){
+			self.x = play_area + 1000;
 		}
 		else if(self.x >= 4000 + play_area && self.x <= 4000+ play_area + 100){
-			self.x = 4000+play_area;
+			self.x = play_area*2 + 1000;
 		}
 		//wordl 3
-		if(self.x <= 8000 && self.x > 7900){
-			self.x = 8000;
+		if(self.x <= play_area*2 + 2000 && self.x > play_area*2 + 1900){
+			self.x = play_area*2 + 2000;
 		}
-		else if(self.x >= 8000 + play_area && self.x <= 8000+ play_area + 100){
-			self.x = 8000+play_area;
+		else if(self.x >= play_area*2 + 2000 && self.x <= play_area*2 + 2100){
+			self.x = play_area*3 + 2000;
 		}
 
 
@@ -260,7 +277,18 @@ var Player = function(id){
 	//Portals
 
 
+	//on healpads
 
+	for(var i = 0; i < healpads.length; i ++){
+		if(self.getDistance(healpads[i])<100){
+			if(self.hp < 100){
+				self.hp += 0.5;
+			}
+			else{
+				self.hp = 100;
+			}
+		}
+	}
 		//hit rocks
 		for(var i = 0; i < rocks.length; i ++){
 
@@ -304,7 +332,6 @@ var Player = function(id){
 			gold: self.gold,
 			stone: self.stone,
 			wood: self.wood,
-			food: self.food,
 			age: self.age,
 			weapon: self.weapon,
 			pressingAttack: self.pressingAttack,
@@ -326,7 +353,6 @@ var Player = function(id){
 			gold: self.gold,
 			stone: self.stone,
 			wood: self.wood,
-			food: self.food,
 			age: self.age,
 			weapon: self.weapon,
 			pressingAttack: self.pressingAttack,
@@ -520,7 +546,7 @@ socket.on('start', function(data){
 		socket.emit('evalAnswer',res);
 	});
 
-		socket.emit('died', true);
+
 	//	delete SOCKET_LIST[socket.id];
 	//	Player.onDisconnect(socket);
 
@@ -543,8 +569,9 @@ setInterval(function(){
 		socket.emit('update',pack);
 		socket.emit('remove',removePack);
 		socket.emit('rocks', rocks);
-		socket.emit('bushes', bushes)
-		socket.emit('time', time);
+		socket.emit('bushes', bushes);
+		socket.emit('healpads', healpads);
+		socket.emit('time', display_time);
 	//	console.log(rocks);
 	}
 	initPack.player = [];
@@ -552,10 +579,23 @@ setInterval(function(){
 
 	removePack.player = [];
 	removePack.bullet = [];
-
-	time ++;
-
-
-
+//timer stuff hahha
+	time += .04;
+	if(time_mode == true){
+		display_time = 60-time;
+		if(time >= 60.1){
+			time = 0;
+			display_time = 0;
+			time_mode = false;
+		}
+	}
+	else{
+		display_time = 5 -time;
+		if(time >= 5.1){
+			time = 0;
+			display_time = 0;
+			time_mode = true;
+		}
+	}
 
 },1000/25);
