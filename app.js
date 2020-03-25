@@ -17,24 +17,19 @@ var SOCKET_LIST = {};
 
 //game area
 var play_area = 5000;
+var world_start2 = 6000;
+var world_start3 = 12000;
 var player_name = "unknown";
-var portal_open = false;
 var main_ticker = 0;
-var p1x = 1500;
-var p1y = 1500;
-var p2x = 3000;
-var p2y = 1500;
-var p3x = 6000;
-var p3y = 1500;
 
-var portal_size = 300;
 var time = 0;
 var time_mode = true;
-display_time = 0;
+var display_time = 0;
 
 var rocks = [];
 var healpads = [];
 var bushes = [];
+var portals = [];
 
 function Portal(x,y){
 	this.x = x;
@@ -77,11 +72,49 @@ function init_game(){
 
 		healpads.push(new Bush(this.hx ,this.hy));
 	}
+	portals.push(new Portal(play_area/2, play_area/2));
 
 
 	//world 2
+	for(var i =0; i< this.item_count;i++){
+		this.rx =  Math.floor(Math.random() * play_area) + world_start2;
+		this.ry =  Math.floor(Math.random() * play_area);
 
+		rocks.push(new Rock(this.rx ,this.ry));
+	}
+	for(var i =0; i< this.item_count;i++){
+		this.fx =  Math.floor(Math.random() * play_area + world_start2);
+		this.fy =  Math.floor(Math.random() * play_area);
+
+		bushes.push(new Bush(this.fx ,this.fy));
+	}
+	for(var i =0; i< this.item_count;i++){
+		this.hx =  Math.floor(Math.random() * play_area + world_start2);
+		this.hy =  Math.floor(Math.random() * play_area);
+
+		healpads.push(new Bush(this.hx ,this.hy));
+	}
+	portals.push(new Portal(play_area/2 + play_area + 1000, play_area/2));
 	//world 3
+	for(var i =0; i< this.item_count;i++){
+		this.rx =  Math.floor(Math.random() * play_area) + world_start3;
+		this.ry =  Math.floor(Math.random() * play_area);
+
+		rocks.push(new Rock(this.rx ,this.ry));
+	}
+	for(var i =0; i< this.item_count;i++){
+		this.fx =  Math.floor(Math.random() * play_area + world_start3);
+		this.fy =  Math.floor(Math.random() * play_area);
+
+		bushes.push(new Bush(this.fx ,this.fy));
+	}
+	for(var i =0; i< this.item_count;i++){
+		this.hx =  Math.floor(Math.random() * play_area + world_start3);
+		this.hy =  Math.floor(Math.random() * play_area);
+
+		healpads.push(new Bush(this.hx ,this.hy));
+	}
+	portals.push(new Portal(play_area/2 + play_area*2 + 2000, play_area/2));
 
 }
 
@@ -174,8 +207,8 @@ var Player = function(id){
 					p.died = true;
 					p.x = Math.floor(Math.random() * play_area);
 					p.y = Math.floor(Math.random() * play_area);
-					self.score = 1;
-					self.gold = 100;
+					self.score += 1;
+					self.gold += 100;
 				}
 			}
 
@@ -229,8 +262,21 @@ var Player = function(id){
 				else
 					self.spdY = 0
 		}
+		self.collision();
+		self.location();
+	}
+		self.location = function(){
+			if(self.x < 5400){
+				self.world = 1
+			}
+			else if(self.x > 5500 && self.x < 11500){
+				self.world = 2
+			}
+			else if (self.x > 11500){self.world = 3;}
 
+		}
 
+		self.collision = function(){
 //hit side
 		if(self.x <= 0){
 			self.x = 0;
@@ -245,18 +291,18 @@ var Player = function(id){
 			self.y = play_area ;
 		}
 		//world 2
-		if(self.x <= play_area + 1000 && self.x > play_area + 900){
-			self.x = play_area + 1000;
+		if(self.x <= world_start2 && self.x > world_start2 - 100){
+			self.x = world_start2;
 		}
-		else if(self.x >= 4000 + play_area && self.x <= 4000+ play_area + 100){
-			self.x = play_area*2 + 1000;
+		else if(self.x >= world_start2 + play_area && self.x <= world_start2 + play_area + 100){
+			self.x = world_start2 + play_area;
 		}
 		//wordl 3
-		if(self.x <= play_area*2 + 2000 && self.x > play_area*2 + 1900){
-			self.x = play_area*2 + 2000;
+		if(self.x <= world_start3 && self.x > world_start3 -100){
+			self.x = world_start3;
 		}
-		else if(self.x >= play_area*2 + 2000 && self.x <= play_area*2 + 2100){
-			self.x = play_area*3 + 2000;
+		else if(self.x >= world_start3 + play_area){
+			self.x = world_start3 + play_area;
 		}
 
 
@@ -275,7 +321,25 @@ var Player = function(id){
 			}
 		}
 	//Portals
-
+	for(var i = 0; i < portals.length; i ++){
+		if(self.getDistance(portals[i])<100){
+			//console.log('on portal');
+			if(time_mode == false){
+				if(self.world == 1){
+					self.x =  world_start2 + Math.floor(Math.random() * play_area);
+					self.y =  Math.floor(Math.random() * play_area);
+				}
+				else if(self.world == 2){
+					self.x =  world_start3 + Math.floor(Math.random() * play_area);
+					self.y =  Math.floor(Math.random() * play_area);
+				}
+				else if(self.world == 3){
+					self.x =  Math.floor(Math.random() * play_area);
+					self.y =  Math.floor(Math.random() * play_area);
+				}
+			}
+		}
+	}
 
 	//on healpads
 
@@ -571,6 +635,7 @@ setInterval(function(){
 		socket.emit('rocks', rocks);
 		socket.emit('bushes', bushes);
 		socket.emit('healpads', healpads);
+		socket.emit('portals', portals);
 		socket.emit('time', display_time);
 	//	console.log(rocks);
 	}

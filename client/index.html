@@ -13,15 +13,19 @@ html{
 		font-family: 'Righteous', cursive;
 }
 html, body, div, canvas {
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
+
 		font-family: 'Righteous', cursive;
 		list-style-type:none;
+		color: white;
+
 
 }
+
 #gameDiv {
 	margin: auto;
-
+	width:100%;
 
 	}
 
@@ -31,7 +35,37 @@ canvas{ position: absolute; z-index: 1 }
 	margin: auto;
 	padding-top: 10%;
 }
+	#map {
+		font-size: 1.2em;
+		top: 100;
+		left: 10;
+		position: absolute;
+		margin: 0 auto;
+		z-index: 2;
+		background-color: rgba(0,0,0,0.5);
+		width: 200px;
+		height: 200px;
+		padding: 5px;
+		border-radius: 5px;
 
+	}
+	#location{
+		width: 10px;
+		height: 10px;
+		padding-top: 0px;
+		padding-left: 0px;
+		position: absolute;
+		margin: 0 auto;
+
+	}
+	#map-portal{
+		width:20px;
+		height: 20px;
+		padding-top: 90px;
+		padding-left: 90px;
+		position: absolute;
+		margin: 0 auto;
+	}
 	#chat-form{
 		padding-left: 45%;
 		position: absolute;
@@ -39,19 +73,22 @@ canvas{ position: absolute; z-index: 1 }
 		z-index: 100;
 		padding-top: 15%;
 		width: 10%;
+		border-radius: 5px;
 
 	}
 	#chat-text{
+		border-radius: 5px;
 		bottom: 20;
 		right: 20;
 		position: absolute;
 		margin: 0 auto;
 		z-index: 2;
 		overflow-y: scroll;
-		height: 200px;
-		width: 200px;
+		height: 150px;
+		width: 150px;
 		background-color: rgba(0,0,0,0.5);
 		padding: 10px;
+
 
 	}
 	#player_name {
@@ -62,7 +99,7 @@ canvas{ position: absolute; z-index: 1 }
 		font-size: 1.5em;
 	}
 	#information-board{
-
+		border-radius: 5px;
 		font-size: 1.2em;
 		bottom: 20;
 		left: 20;
@@ -75,6 +112,7 @@ canvas{ position: absolute; z-index: 1 }
 
 	}
 	#world{
+		border-radius: 5px;
 		font-size: 1.2em;
 		top: 10;
 		left: 45%;
@@ -85,6 +123,7 @@ canvas{ position: absolute; z-index: 1 }
 		padding: 15px;
 	}
 	#time{
+		border-radius: 5px;
 		font-size: 1.2em;
 		top: 10;
 		left: 10;
@@ -169,6 +208,10 @@ a{
 				<div id="time">
 						0:00
 				</div>
+				<div id="map">
+					<img src="client/img/map_player.png" alt="" id='location'></img>
+					<img src="client/img/hat_36.png" alt="X" id="map-portal"></img>
+				</div>
 				<div id="information-board" style="	list-style-type:none;">
 					<ul>
 						<li id="kills">
@@ -187,475 +230,5 @@ a{
 					</ul>
 				</div>
 		</div>
-
-
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-<script>
-var canvas = document.querySelector('canvas');
-var ctx = canvas.getContext('2d');
-
-canvas.width = innerWidth-2;
-canvas.height = innerHeight-2;
-	var WIDTH = canvas.width;
-	var HEIGHT = canvas.height;
-	var play_area = 5000;
-	var p1x = 1500;
-	var p1y = 1500;
-	var p2x = 3000;
-	var p2y = 1500;
-	var p3x = 6000;
-	var p3y = 1500;
-
-
-	var portal_size = 300;
-	var world = 1;
-	var rocks = [];
-	var bushes = [];
-	var healpads = [];
-	var time = 0;
-	var socket = io();
-	//starte
-	function start(){
-		var player_name = document.getElementById('player_name').value;
-		socket.emit('start', player_name);
-		document.getElementById('gameDiv').style = "display: inline";
-		document.getElementById('container').style = "display: none";
-
-	}
-	function restart(){
-
-		document.getElementById('gameDiv').style = "display: none";
-		document.getElementById('start').style = "display: inline";
-
-	}
-
-
-	//chat
-	var chatText = document.getElementById('chat-text');
-	var chatInput = document.getElementById('chat-input');
-	var chatForm = document.getElementById('chat-form');
-	var chatOpened = false;
-	var world = document.getElementById('world');
-	var gold = document.getElementById('gold');
-	var kills = document.getElementById('kills');
-	var stone = document.getElementById('stone');
-	var wood = document.getElementById('wood');
-
-	var current_time = document.getElementById('time');
-	socket.on('addToChat',function(data){
-		chatText.innerHTML += '<div>' + data + '</div>';
-	});
-	socket.on('evalAnswer',function(data){
-		console.log(data);
-	});
-	socket.on('died', function(data){
-		console.log(data);
-		console.log('Died!!!')
-	});
-
-
-	chatForm.onsubmit = function(e){
-		e.preventDefault();
-		if(chatInput.value[0] === '/')
-			socket.emit('evalServer',chatInput.value.slice(1));
-		else
-			socket.emit('sendMsgToServer',chatInput.value);
-		chatInput.value = '';
-	}
-
-	//game
-	var Img = {};
-	Img.player = new Image();
-	Img.player.src = '/client/img/top_player.png';
-	Img.bullet = new Image();
-	Img.bullet.src = '/client/img/bullet.png';
-	Img.map = new Image();
-	Img.map.src = '/client/img/grid.png';
-	Img.sword = new Image();
-	Img.sword.src = ' client/img/sword.png';
-	Img.portal = new Image();
-	Img.portal.src = ' client/img/portal.jpg';
-	Img.rock = new Image();
-	Img.rock.src = ' client/img/Stone.png';
-	Img.bush = new Image();
-	Img.bush.src = ' client/img/Tree.png';
-	Img.healpad = new Image();
-	Img.healpad.src = ' client/img/healpad.png';
-
-
-	var ctx = document.getElementById("ctx").getContext("2d");
-	ctx.font = '30px Arial';
-
-	var Player = function(initPack){
-		var self = {};
-		self.id = initPack.id;
-		self.number = initPack.number;
-		self.x = initPack.x;
-		self.y = initPack.y;
-		self.radius = initPack.radius;
-		self.hp = initPack.hp;
-		self.hpMax = initPack.hpMax;
-		self.score = initPack.score;
-		self.name = initPack.name;
-		self.mouseAngle = initPack.mouseAngle;
-		self.gold = initPack.gold;
-		self.stone = initPack.stone;
-		self.wood = initPack.wood;
-		self.weapon = initPack.weapon;
-		self.world = initPack.world;
-		self.pressingAttack = initPack.pressingAttack;
-		self.displayAngle = 0;
-		self.direction = .1;
-		self.animate = false;
-		self.lastAngle = 0;
-		self.ticker = 0;
-		self.died = initPack.died;
-
-
-
-
-		self.draw = function(){
-			var x = self.x - Player.list[selfId].x + WIDTH/2;
-			var y = self.y - Player.list[selfId].y + HEIGHT/2;
-
-			//update numbers
-			kills.innerHTML = 'Kills: ' + Player.list[selfId].score;
-			gold.innerHTML = 'Gold: ' + Player.list[selfId].gold;
-			stone.innerHTML = 'Stone: ' + Player.list[selfId].stone;
-			wood.innerHTML = 'Wood: ' + Player.list[selfId].wood;
-			world.innerHTML = 'World ' + Player.list[selfId].world;
-			current_time.innerHTML = 'Time: ' + time;
-
-			//draw players name
-			ctx.textAlign = 'center';
-			ctx.fillStyle = '#000';
-			ctx.fillText(self.name, x,  y - 40);
-
-
-
-			//draw xp
-			ctx.radius =
-			ctx.fillStyle =	ctx.fillStyle = 'rgba(0, 0, 0, .5)';
-			ctx.fillRect(x-self.radius- 10,y+45,self.hpMax*.85,20);//bg overlay
-			ctx.fillStyle = '#6bed4b';
-			ctx.fillRect(x-self.radius-5,y + 50,self.hp*.75,10);//actual hp
-			ctx.stroke();
-			//draw sword
-			var width = Img.player.width;
-			var height = Img.player.height;
-			ctx.save();
-			ctx.translate(x, y);
-			ctx.rotate((3.14 / 180)*self.mouseAngle + self.displayAngle + 1.7);
-			ctx.translate(-x,-y);
-			if(self.weapon == 'sword'){
-				if(self.pressingAttack){
-					if(self.animate == false)
-						self.animate = true;
-						self.lastAngle = self.mouseAngle;
-				}
-				if(self.animate){
-					if(self.ticker <= 5){
-						self.direction = -.6;
-					}
-					else if(self.ticker > 5 && self.ticker < 20){
-						self.direction = .20;
-
-					}
-					else{
-						self.displayAngle = -.2;
-						self.ticker = 0;
-						self.animate = false;
-					}
-
-					self.displayAngle += self.direction;
-
-					self.ticker ++;
-
-				}
-
-
-				//self.mouseAngle -=
-				ctx.save();
-				ctx.translate(x, y);
-				ctx.rotate(-1.7);
-				ctx.translate(-x,-y);
-				ctx.drawImage(Img.sword,0,0,Img.sword.width,Img.sword.height,x-width/2 +65,y-height/2  + 50,width/2,height/1.2);
-						ctx.restore();
-			}
-			ctx.drawImage(Img.player,0,0,Img.player.width,Img.player.height,x-width/2,y-height/2,width,height);
-
-
-			ctx.restore();
-
-			//local variables
-
-		}
-
-		Player.list[self.id] = self;
-
-
-		return self;
-	}
-	Player.list = {};
-
-
-
-	var Bullet = function(initPack){
-		var self = {};
-		self.id = initPack.id;
-		self.x = initPack.x;
-		self.y = initPack.y;
-
-		self.draw = function(){
-			var width = Img.bullet.width/2;
-			var height = Img.bullet.height/2;
-
-			var x = self.x - Player.list[selfId].x + WIDTH/2;
-			var y = self.y - Player.list[selfId].y + HEIGHT/2;
-
-			ctx.drawImage(Img.bullet,
-				0,0,Img.bullet.width,Img.bullet.height,
-				x-width/2,y-height/2,width,height);
-		}
-
-		Bullet.list[self.id] = self;
-		return self;
-	}
-	Bullet.list = {};
-
-
-
-	var selfId = null;
-
-	socket.on('init',function(data){
-		if(data.selfId)
-			selfId = data.selfId;
-		//{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
-		for(var i = 0 ; i < data.player.length; i++){
-			new Player(data.player[i]);
-		}
-		for(var i = 0 ; i < data.bullet.length; i++){
-			new Bullet(data.bullet[i]);
-		}
-
-	});
-
-	socket.on('update',function(data){
-		//{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
-		for(var i = 0 ; i < data.player.length; i++){
-			var pack = data.player[i];
-			var p = Player.list[pack.id];
-
-
-			if(p){
-				if(pack.x !== undefined)
-					p.x = pack.x;
-				if(pack.y !== undefined)
-					p.y = pack.y;
-				if(pack.radius !== undefined)
-					p.radius = pack.radius;
-				if(pack.hp !== undefined)
-					p.hp = pack.hp;
-				if(pack.score !== undefined)
-					p.score = pack.score;
-				if(pack.gold !== undefined)
-					p.gold = pack.gold;
-				if(pack.stone !== undefined)
-					p.stone = pack.stone;
-				if(pack.wood !== undefined)
-					p.wood = pack.wood;
-				if(pack.name != undefined)
-					p.name = pack.name;
-				if(pack.mouseAngle != undefined)
-						p.mouseAngle = pack.mouseAngle;
-				if(pack.weapon != undefined)
-						p.weapon = pack.weapon;
-				if(pack.pressingAttack != undefined)
-						p.pressingAttack = pack.pressingAttack;
-				if(pack.world != undefined)
-						p.world = pack.world;
-				if(pack.died != undefined)
-						p.died = pack.died;
-
-
-
-			}
-		}
-		for(var i = 0 ; i < data.bullet.length; i++){
-			var pack = data.bullet[i];
-			var b = Bullet.list[data.bullet[i].id];
-			if(b){
-				if(pack.x !== undefined)
-					b.x = pack.x;
-				if(pack.y !== undefined)
-					b.y = pack.y;
-			}
-		}
-
-
-	});
-
-	socket.on('remove',function(data){
-		//{player:[12323],bullet:[12323,123123]}
-		for(var i = 0 ; i < data.player.length; i++){
-			delete Player.list[data.player[i]];
-		}
-		for(var i = 0 ; i < data.bullet.length; i++){
-			delete Bullet.list[data.bullet[i]];
-		}
-
-	});
-	socket.on('rocks',function(data){
-
-			rocks = data.slice(0);
-
-	});
-	socket.on('bushes',function(data){
-		bushes = data.slice(0);
-	});
-	socket.on('healpads',function(data){
-		healpads = data.slice(0);
-	});
-	//console.log(rocks);
-
-	socket.on('time', function(data){
-		time = parseInt(data);
-
-	});
-
-	setInterval(function(){
-		//scrol chat
-
-		if(!selfId)
-			return;
-		ctx.clearRect(0,0,canvas.width,canvas.height);
-		drawMap();
-
-		drawPortal();
-		drawObjects_top();
-		for(var i in Player.list)
-			Player.list[i].draw();
-		drawObjects();
-		for(var i in Bullet.list)
-			Bullet.list[i].draw();
-
-	},40);
-	var drawObjects_top = function(){
-		var x = WIDTH/2 - Player.list[selfId].x;
-		var y = HEIGHT/2 - Player.list[selfId].y;
-		var item_count = 10;
-		for(var i=0; i < item_count; i ++){
-			//console.log(rocks[i]);
-				ctx.drawImage(Img.healpad, x + healpads[i].x -75, y+ healpads[i].y - 75, 150, 150);
-		}
-
-	}
-	var drawObjects = function(){
-		var x = WIDTH/2 - Player.list[selfId].x;
-		var y = HEIGHT/2 - Player.list[selfId].y;
-		var item_count = 10;
-		for(var i=0; i < item_count; i ++){
-			//console.log(rocks[i]);
-				ctx.drawImage(Img.rock, x + rocks[i].x -75, y+ rocks[i].y - 75, 150, 150);
-		}
-		for(var i=0; i < item_count; i ++){
-			//console.log(rocks[i]);
-				ctx.drawImage(Img.bush, x + bushes[i].x -125, y+ bushes[i].y - 125, 250, 250);
-		}
-
-	}
-	var drawMap = function(){
-		var x = WIDTH/2 - Player.list[selfId].x;
-		var y = HEIGHT/2 - Player.list[selfId].y;
-		ctx.fillStyle = "grey";
-		ctx.fillRect(0,0,WIDTH,HEIGHT);
-		ctx.fill();
-
-		ctx.drawImage(Img.map,x,y,play_area,play_area);
-		ctx.fillStyle = "rgba(100, 200, 155, 0.5)";;
-		ctx.fillRect(x,y,play_area,play_area);
-
-
-		//world 2
-		ctx.drawImage(Img.map,x+play_area + 1000,y,play_area,play_area);
-		ctx.fillStyle = "rgba(102, 196, 103, 0.5)";
-		ctx.fillRect(x + play_area + 1000,y, play_area,play_area);
-
-
-		//world 3
-
-		ctx.drawImage(Img.map,x+play_area*2 + 2000,y,play_area,play_area);
-		ctx.fillStyle = "blue";
-		ctx.fillRect(x + play_area*2 + 2000,y, play_area,play_area);
-
-
-	}
-	var drawPortal = function(){
-		var x = WIDTH/2 - Player.list[selfId].x;
-		var y = HEIGHT/2 - Player.list[selfId].y;
-		ctx.drawImage(Img.portal, x + play_area/2, y+ play_area/2, 300, 300);
-	}
-
-
-
-	document.onkeydown = function(event){
-		if(event.keyCode === 68)	//d
-			socket.emit('keyPress',{inputId:'right',state:true});
-		else if(event.keyCode === 83)	//s
-			socket.emit('keyPress',{inputId:'down',state:true});
-		else if(event.keyCode === 65) //a
-			socket.emit('keyPress',{inputId:'left',state:true});
-		else if(event.keyCode === 87) // w
-			socket.emit('keyPress',{inputId:'up',state:true});
-		//else if(event.keyCode === 13) // ENTER
-
-
-
-	}
-	document.onkeyup = function(event){
-		if(event.keyCode === 68)	//d
-			socket.emit('keyPress',{inputId:'right',state:false});
-		else if(event.keyCode === 83)	//s
-			socket.emit('keyPress',{inputId:'down',state:false});
-		else if(event.keyCode === 65) //a
-			socket.emit('keyPress',{inputId:'left',state:false});
-		else if(event.keyCode === 87) // w
-			socket.emit('keyPress',{inputId:'up',state:false});
-		else if(event.keyCode === 81) // q
-			socket.emit('keyPress',{inputId:'q',state:false});
-		else if(event.keyCode === 13) // ENTER
-
-			if(chatOpened == true){
-				chatInput.style = 'display: none';
-				chatOpened = false;
-			}
-			else{
-				chatInput.style = 'display: absolute';
-				chatInput.focus();
-				chatOpened = true;
-			}
-
-
-	}
-
-	document.onmousedown = function(event){
-		socket.emit('keyPress',{inputId:'attack',state:true});
-	}
-	document.onmouseup = function(event){
-		socket.emit('keyPress',{inputId:'attack',state:false});
-	}
-	document.onmousemove = function(event){
-		var x = -(WIDTH/2) + event.clientX - 8;
-		var y = -(HEIGHT/2) + event.clientY - 8;
-		var angle = Math.atan2(y,x) / Math.PI * 180;
-		socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
-	}
-	//block right click
-	document.addEventListener("contextmenu", function(e){
-    e.preventDefault();
-}, false)
-
-
-
-
-</script>
+<script src="client/js/game.js"></script>
