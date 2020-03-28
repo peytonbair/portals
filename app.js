@@ -39,17 +39,24 @@ function Portal(x,y){
 function Rock(x, y){
 	this.x  = x;
 	this.y  = y;
+	this.displayX = this.x;
+	this.displayY = this.y;
 	this.radius = 50;
+	this.hit = false;
+
 }
 function Healpad(x, y){
 	this.x = x;
 	this.y = y;
-	this.radius = 50;
+
 }
 function Bush(x, y){
 	this.x  = x;
 	this.y  = y;
+	this.displayX = this.x;
+	this.displayY = this.y;
 	this.radius = 75;
+	this.hit = false;
 }
 function init_game(){
 	//world 1
@@ -118,8 +125,15 @@ function init_game(){
 
 }
 
+function update_game(){
+	for(var i = 0; i < 30; i++){
+		rocks[i].hit = false;
+		bushes[i].hit = false;
+	}
 
+}
 init_game();
+
 
 
 var Entity = function(){
@@ -197,43 +211,55 @@ var Player = function(id){
 		for(var i in Player.list){
 			var p = Player.list[i];
 			//hit player
-
 			if(self.getDistance(p) < 140 && self.id !== p.id){
-				if(self.mouseAngle + 90 )
-				p.hp -= 25;
+					var angle = Math.atan2(p.y - self.y, p.x - self.x) * 180 / Math.PI;
+					if(self.mouseAngle <= angle + 90 && self.mouseAngle >= angle -90){
+						p.hp -= 25;
 
-				if(p.hp <= 0){
-					p.hp = p.hpMax;
-					p.died = true;
-					p.x = Math.floor(Math.random() * play_area);
-					p.y = Math.floor(Math.random() * play_area);
-					self.score += 1;
-					self.gold += 100;
-				}
+						if(p.hp <= 0){
+							p.hp = p.hpMax;
+							p.died = true;
+							p.x = Math.floor(Math.random() * play_area);
+							p.y = Math.floor(Math.random() * play_area);
+							self.score += 1;
+							self.gold += 100;
+						}
+					}
 			}
 
 		}
 		//hit rocks
 		for(var i = 0; i < rocks.length; i ++){
-			if(self.getDistance(rocks[i])<130){
-				self.stone ++;
+
+			if(self.getDistance(rocks[i])<150){
+				var angle = Math.atan2(rocks[i].y - self.y, rocks[i].x - self.x) * 180 / Math.PI;
+				if(self.mouseAngle <= angle + 90 && self.mouseAngle >= angle -90){
+					self.stone ++;
+					rocks[i].hit = true;
+				}
 			}
 		}
 
 		//hit bushes
 		for(var i = 0; i < bushes.length; i ++){
-			if(self.getDistance(bushes[i])<130){
-				self.wood ++;
+			if(self.getDistance(bushes[i])<200){
+				var angle = Math.atan2(bushes[i].y - self.y, bushes[i].x - self.x) * 180 / Math.PI;
+				if(self.mouseAngle <= angle + 90 && self.mouseAngle >= angle -90){
+					self.wood ++;
+					bushes[i].hit = true;
+				}
 			}
 		}
 	}
 
 	self.shootBullet = function(angle){
-
-			var b = Bullet(self.id,angle);
-			b.x = self.x;
-			b.y = self.y;
-
+			if(self.stone > 2 && self.wood > 2){
+				var b = Bullet(self.id,angle);
+				b.x = self.x;
+				b.y = self.y;
+				self.stone -= 3;
+				self.wood -= 3;
+		}
 	}
 
 	self.updateSpd = function(){
@@ -626,6 +652,7 @@ setInterval(function(){
 		bullet:Bullet.update(),
 
 	}
+	//update map
 
 	for(var i in SOCKET_LIST){
 		var socket = SOCKET_LIST[i];
@@ -644,6 +671,9 @@ setInterval(function(){
 
 	removePack.player = [];
 	removePack.bullet = [];
+
+	//update playfield
+	update_game();
 //timer stuff hahha
 	time += .04;
 	if(time_mode == true){
