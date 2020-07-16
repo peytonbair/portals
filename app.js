@@ -8,8 +8,8 @@ app.get('/',function(req, res) {
 });
 app.use('/client',express.static(__dirname + '/client'));
 
-serv.listen(2000, '192.168.1.6');
-//serv.listen(process.env.PORT || 2000);
+//serv.listen(2000, '192.168.1.6');
+serv.listen(process.env.PORT || 2000);
 
 console.log("Server started...");
 

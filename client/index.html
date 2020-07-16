@@ -183,7 +183,14 @@ a{
   background-color: rgb(0,0,0); /* Fallback color */
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
 }
-
+.modal a{
+	color: green;
+	border: 2px solid green;
+	padding: 2px 3px;
+}
+.modal li{
+	padding: 8px;
+}
 /* Modal Content */
 .modal-content {
   background-color: #fefefe;
@@ -227,7 +234,7 @@ a{
   padding: 14px 16px;
   transition: 0.3s;
   font-size: 17px;
-	width:33.33%;
+	width:25%;
 	color:black;
 }
 
@@ -303,7 +310,7 @@ a{
 			<li id="wood">
 				Wood:
 			</li>
-			<button id="upgrade-btn">Open Modal</button>
+			<button id="upgrade-btn">Upgrades</button>
 		</ul>
 	</div>
 
@@ -314,27 +321,47 @@ a{
     <h1>Upgrades</h1>
 
 		<div class="tab">
-		  <button class="tablinks" onclick="openCity(event, 'Armor')">Armor</button>
-		  <button class="tablinks" onclick="openCity(event, 'Speed')">Speed</button>
-		  <button class="tablinks" onclick="openCity(event, 'Bounty')">Bounty</button>
+		  <button class="tablinks" onclick="openTab(event, 'Armor')">Armor</button>
+		  <button class="tablinks" onclick="openTab(event, 'Speed')">Speed</button>
+			 <button class="tablinks" onclick="openTab(event, 'Weapon')">Weapon</button>
+		  <button class="tablinks" onclick="openTab(event, 'Bounty')">Bounty</button>
 		</div>
 
 <div id="Armor" class="tabcontent">
   <h3>Armor</h3>
-  <p>London is the capital city of England.</p>
+  <progress id="file" value="50" max="100"></progress>
+	<a href="#">UPGRADE</a>
 </div>
 
 <div id="Speed" class="tabcontent">
   <h3>Speed</h3>
-  <p>Paris is the capital of France.</p>
+	<progress id="file" value="20" max="100"></progress>
+	<a href="#">UPGRADE</a>
 </div>
+<div id="Weapon" class="tabcontent">
+  <h3>Weapons</h3>
+  <ul>
+  	<li>Sword
+			<progress id="file" value="50" max="100"></progress>
+			<a href="#">UPGRADE</a>
+		</li>
+		<li>Gun
+			<progress id="file" value="50" max="100"></progress>
+			<a href="#">UPGRADE</a>
+		</li>
 
+  </ul>
+</div>
 <div id="Bounty" class="tabcontent">
   <h3>Bounty</h3>
-  <p>Tokyo is the capital of Japan.</p>
+  <ul>
+  	<li>Basic <a href="#">BUY</a></li>
+		<li>Medium <a href="#">BUY</a></li>
+		<li>Death <a href="#">BUY</a></li>
+  </ul>
 </div>
 
-	</div>
+</div>
 
 </div>
 
