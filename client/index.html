@@ -170,6 +170,85 @@ a{
 	text-decoration: none;
 	color: white;
 }
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 3; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 50%;
+	height: 50%;
+	color: black;
+	opacity: 0.8;
+}
+
+/* The Close Button */
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+	width:33.33%;
+	color:black;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+	color: black;
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
 </style>
 <div class="container" id="container">
 
@@ -191,48 +270,76 @@ a{
 		</div>
 </div>
 
-		<div id="gameDiv" style="display: none">
-			<canvas id="ctx" width="500" height="500"></canvas>
+<div id="gameDiv" style="display: none">
+	<canvas id="ctx" width="500" height="500"></canvas>
+	<div id="chat-text">
+		<div>Hello!</div>
+	</div>
+
+	<form id="chat-form" >
+		<input id="chat-input" type="text" style="display:none" maxlength="30"></input>
+	</form>
+	<div id="world">
+		World 1
+	</div>
+	<div id="time">
+			0:00
+	</div>
+	<div id="map">
+		<img src="client/img/map_player.png" alt="X" id="map-portal"></img>
+		<img src="client/img/map_player.png" alt="" id='location'></img>
+	</div>
+	<div id="information-board" style="	list-style-type:none;">
+		<ul>
+			<li id="kills">
+				kills:
+			</li>
+			<li id="gold">
+				gold:
+			</li>
+			<li id="stone">
+				Stone:
+			</li>
+			<li id="wood">
+				Wood:
+			</li>
+			<button id="upgrade-btn">Open Modal</button>
+		</ul>
+	</div>
 
 
-				<div id="chat-text">
-					<div>Hello!</div>
-				</div>
+<div id="upgrades" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h1>Upgrades</h1>
 
-				<form id="chat-form" >
-					<input id="chat-input" type="text" style="display:none" maxlength="30"></input>
-				</form>
-				<div id="world">
-					World 1
-				</div>
-				<div id="time">
-						0:00
-				</div>
-				<div id="map">
-
-					<img src="client/img/map_player.png" alt="X" id="map-portal"></img>
-					<img src="client/img/map_player.png" alt="" id='location'></img>
-				</div>
-				<div id="information-board" style="	list-style-type:none;">
-					<ul>
-						<li id="kills">
-							kills:
-						</li>
-						<li id="gold">
-							gold:
-						</li>
-						<li id="stone">
-							Stone:
-						</li>
-						<li id="wood">
-							Wood:
-						</li>
-
-					</ul>
-				</div>
-				<div id="upgrades">
-
-				</div>
+		<div class="tab">
+		  <button class="tablinks" onclick="openCity(event, 'Armor')">Armor</button>
+		  <button class="tablinks" onclick="openCity(event, 'Speed')">Speed</button>
+		  <button class="tablinks" onclick="openCity(event, 'Bounty')">Bounty</button>
 		</div>
+
+<div id="Armor" class="tabcontent">
+  <h3>Armor</h3>
+  <p>London is the capital city of England.</p>
+</div>
+
+<div id="Speed" class="tabcontent">
+  <h3>Speed</h3>
+  <p>Paris is the capital of France.</p>
+</div>
+
+<div id="Bounty" class="tabcontent">
+  <h3>Bounty</h3>
+  <p>Tokyo is the capital of Japan.</p>
+</div>
+
+	</div>
+
+</div>
+
+</div>
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 <script src="client/js/game.js"></script>
+<script src="client/js/modal.js"></script>
+<script src="client/js/tabs.js"></script>
